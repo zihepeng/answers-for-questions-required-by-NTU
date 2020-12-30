@@ -1,0 +1,345 @@
+#Q1
+## a For m=9, n=9 matrix, find the operations for the following summed numbers: 65, 72, 90, 110.
+df=as.data.frame(t(combn(16,8)))
+names=data.frame(matrix(replicate(12870*17,0),nrow=12870,ncol=17))
+for (i in 1:12870){
+  for (j in 1:8){
+    x=df[i,j]
+    names[i,x]=1 
+  }
+} ### 0 for down, 1 for right
+for (i in 1:12870){
+  names[i,17]=sum(1:9)+sum(df[i,])-sum(1:8)+8
+} ### all the possibilities
+for (i in 1:12870){
+  for (j in 1:16){
+    if (names[i,j]=='0'){names[i,j]='D'}else{names[i,j]='R'}
+  }
+} ###change 1 and 0 to R and D
+location=which(names$V17==65)
+file1=names[location,]
+location=which(names$V17==72)
+file2=names[location,]
+location=which(names$V17==90)
+file3=names[location,]
+location=which(names$V17==110)
+file4=names[location,]###search the data set for right sums and print the operations
+filetotal1=data.frame(rbind(file1,file2,file3,file4))
+q=filetotal1$V17
+filetotal1=data.frame(q,filetotal1[,-17])
+write.table(filetotal1,file='C:/Users/y1l1q/Desktop/answers/output_question_1.txt',row.names = F,col.names = F,quote = F)
+## b For m=90,000, n=100,000 matrix (90,000 rows, 100,000 columns), find the operations for the following summed numbers: 87127231192 and 5994891682.
+### Maximum sum is 13050045000 so there is no operation for 87127231192.
+### 5994891682: 13050045000-5994891682=7055153318,so there are 7055153318 numbers on the left of the operation arrows.
+
+
+ 
+#Q3 
+train_data <- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 3/train_data.txt")
+test_data <- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 3/test_data.txt")
+train_truth <- read.csv("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 3/train_truth.txt", sep="")
+train=data.frame(cbind(train_data,train_truth))
+library(neuralnet)
+##description about neuralnet package is in the docx file 
+net=neuralnet(y~.,data = train,hidden = c(4,4))
+plot(net)
+y=data.frame(y=predict(net,test_data))
+write.table(y,file='C:/Users/y1l1q/Desktop/answers/output_question_3.txt',row.names = F,col.names = T,quote = F)
+
+#Q4 4-connectivity 
+Q <- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 4/input_question_4", header=FALSE)
+## change separate pixel into -1
+for (i in 2:9){
+  if ((Q[i,1]==1)&(Q[i-1,1]==0)&(Q[i+1,1]==0)&(Q[i,2]==0)){Q[i,1]=-1}
+  if ((Q[i,20]==1)&(Q[i-1,20]==0)&(Q[i+1,20]==0)&(Q[i,19]==0)){Q[i,20]=-1}
+}  ###the first and 20th columns
+for (i in 2:19){
+  if ((Q[1,i]==1)&(Q[1,i-1]==0)&(Q[1,i+1]==0)&(Q[2,i]==0)){Q[1,i]=-1}
+  if ((Q[10,i]==1)&(Q[10,i-1]==0)&(Q[10,i+1]==0)&(Q[9,i]==0)){Q[10,i]=-1}
+} ###the first and 10th rows
+if ((Q[1,1]==1)&(Q[2,1]==0)&(Q[1,2]==0)){Q[1,1]=-1}
+if ((Q[1,20]==1)&(Q[1,19]==0)&(Q[2,20]==0)){Q[1,20]=-1}
+if ((Q[10,1]==1)&(Q[9,1]==0)&(Q[10,2]==0)){Q[10,1]=-1}
+if ((Q[10,20]==1)&(Q[10,19]==0)&(Q[9,20]==0)){Q[10,20]=-1} ### four vertices
+for (i in 2:9){
+  for (j in 2:19){
+    if ((Q[i,j]==1)&(Q[i-1,j]==0)&(Q[i+1,j]==0)&(Q[i,j+1]==0)&(Q[i,j-1]==0)){Q[i,j]=-1}
+  }
+} #pixels inside
+## find clusters 
+for (i in 20:1){
+  for (j in 1:10){
+   if ((Q[j,i])==1){break}
+}}
+Q[j,i]=2 #find the first 1 and give it a value of 2
+q=2
+for (i in 1:20){
+  for (j in 1:10){
+    if (i==1){if (Q[j,i]==1){if (Q[j-1,i]==0){q=q+1 
+                                              Q[j,i]=q} ### first column
+                             if (Q[j-1,i]>1){Q[j,i]=Q[j-1,i]}}}
+    if (j==1){if (Q[j,i]==1){if (Q[j,i-1]==0){q=q+1 
+                                              Q[j,i]=q} ### first row 
+                             if (Q[j,i-1]>1){Q[j,i]=Q[j,i-1]}}}
+    if ((j!=1)&(i!=1)){if (Q[j,i]==1){if ((Q[j,i-1]==0)&(Q[j-1,i]==0)){q=q+1 
+                                                                       Q[j,i]=q} 
+                                      if ((Q[j,i-1]==1)|(Q[j-1,i]==1)){Q[j,i]=max(Q[j,i-1],Q[j-1,i])}
+                                      if ((Q[j,i-1]==0)&(Q[j-1,i]>0)){Q[j,i]=Q[j-1,i]}
+                                      if ((Q[j,i-1]>0)&(Q[j-1,i]==0)){Q[j,i]=Q[j,i-1]}
+                                      if ((Q[j,i-1]>1)&(Q[j-1,i]>1)&(Q[j-1,i]==Q[j,i-1])){Q[j,i]=Q[j-1,i]}
+                                      if ((Q[j,i-1]>1)&(Q[j-1,i]>1)&(Q[j-1,i]!=Q[j,i-1])){Q[j,i]=min(Q[j-1,i],Q[j,i-1])
+                                                                                          Q[j-1,i]=min(Q[j-1,i],Q[j,i-1])
+                                                                                          Q[j,i-1]=min(Q[j-1,i],Q[j,i-1])
+                                                                                          q=q-1}
+      }}
+  }
+} ### down and right; consider Q[j-1,i] and Q[i,j-1]
+for (i in 1:20){
+  for (j in 1:10){
+    if (11-j==1){if (Q[11-j,21-i]>1){if (Q[11-j,20-i]>Q[11-j,21-i]){Q[11-j,20-i]>Q[11-j,21-i]}}}
+    if (21-i==1){if (Q[11-j,21-i]>1){if (Q[10-j,21-i]>Q[11-j,21-i]){Q[10-j,21-i]>Q[11-j,21-i]}}}
+    if ((11-j!=1)&(21-i!=1)){if (Q[11-j,21-i]>1){
+      if (Q[10-j,21-i]>Q[11-j,21-i]){Q[10-j,21-i]=Q[11-j,21-i]}
+      if (Q[11-j,20-i]>Q[11-j,21-i]){Q[11-j,20-i]=Q[11-j,21-i]}
+    }}
+    }
+} ###backwards from Q[10,20] up and left; consider Q[j-1,i] and Q[i,j-1] and compare them to Q[j,i]
+for (i in 1:20){
+  for (j in 1:10){
+    if (Q[j,i]>1){Q[j,i]=Q[j,i]-1}
+  }
+} ### all minus 1
+max(Q) ### 12 connected components in total by 4-connectivity
+write.table(Q,file='C:/Users/y1l1q/Desktop/answers/output_question_4.txt',row.names = F,col.names = F,quote = F)
+
+#Q5
+##1. L=5 with 12 red beads (R) and 13 blue beads (B)
+###R and B as an arrangement, arranged in a 5*5 matrix
+ma=c()
+for (i in 1:25){
+  if (i%%2==0){ma[i]='R'}
+  else{ma[i]='B'}
+}
+ma=data.frame(matrix(ma,nrow = 5,ncol = 5)) 
+write.table(ma,file='C:/Users/y1l1q/Desktop/answers/output_question_5_1.txt',row.names = F,col.names = F,quote = F)
+##2. L=64 with 139 red beads (R), 1451 blue beads (B), 977 green beads (G), 1072 white beads (W), 457 yellow beads (Y)
+### 1072W+977G=2049;139R+457Y+1451B=2047; one in group 1 and one in group 2 as an arrangement, arranged in a 64*64 matrix
+mb1=c(replicate(1072,'W'),replicate(977,'G'))
+mb2=c(replicate(139,'R'),replicate(457,'Y'),replicate(1451,'B'))
+b1=0
+b2=0
+mb=c()
+for (i in 1:4094){
+  if (i%%2!=0){
+    b1=b1+1
+    mb[i]=mb1[b1]}
+  else{
+    b2=b2+1
+    mb[i]=mb2[b2]}
+}
+mb[4095]='G'
+mb[4096]='G'
+mb=data.frame(matrix(mb,nrow = 64,ncol = 64))
+for (i in 1:64){
+  if (i%%2==0){mb[,i]=rev(mb[,i])} ###even column oppositely aligned to make penalty low 
+}
+mb[1,64]='W'
+mb[1,33]='G' ###exchange (1,64) and (1,33) to make penalty 0.
+write.table(mb,file='C:/Users/y1l1q/Desktop/answers/output_question_5_2.txt',row.names = F,col.names = F,quote = F)
+
+#Q6
+polygon <- read.table("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 6/input_question_6_polygon", quote="\"", comment.char="")
+points <- read.table("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 6/input_question_6_points", quote="\"")
+for (i in 1:10){
+ npoint=0
+ for(j in 1:9){
+  if (polygon[j,2]==polygon[j+1,2]){next}###the side of polygon is parallel with the ray from the point
+  if (points[i,2]<=min(polygon[j,2],polygon[j+1,2])){next}
+  if (points[i,2]>max(polygon[j,2],polygon[j+1,2])){next}### the intersection point is on the extension line of this side
+  if ((points[i,2]<=max(polygon[j,2],polygon[j+1,2]))&(points[i,2]>min(polygon[j,2],polygon[j+1,2]))){
+    interx=polygon[j,1]+(points[i,2]-polygon[j,2])*(polygon[j+1,1] - polygon[j,1])/(polygon[j+1,2]-polygon[j,2])###calculate the abscissa of the intersection
+    if (interx>points[i,1]){npoint=npoint+1}}
+ }
+ if (npoint%%2==0){points[i,3]='outside'}else{points[i,3]='inside'}###number of intersection point: even(outside);odd(inside)
+}
+write.table(points,file='C:/Users/y1l1q/Desktop/answers/output_question_6.txt',row.names = F,col.names = F,quote = F)
+
+#Q7.1 (L1,L2)=(50,57)
+## I is known
+i71 <- read.csv("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 7/Question 7.1/input_index_7_1.txt", sep="")
+for (i in 1:length(i71$index)){
+  q=i71$index[i]+1
+  if (q%%50==0){i71$x1[i]=49}else{i71$x1[i]=-1+q%%50}
+  i71$x2[i]=floor(q/50)
+}
+outputc71=data.frame(x1=i71$x1,x2=i71$x2)
+write.table(outputc71,file='C:/Users/y1l1q/Desktop/answers/output_coordinates_7_1.txt',row.names = F,col.names = T,quote = F)
+## (x1,x2) is known
+x71<- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 7/Question 7.1/input_coordinates_7_1.txt")
+for (i in 1:length(x71$x1)){
+ x71$index=50*x71$x2+x71$x1 
+}
+outputindex71=data.frame(index=x71$index)
+write.table(outputindex71,file='C:/Users/y1l1q/Desktop/answers/output_index_7_1.txt',row.names = F,col.names = T,quote = F)
+
+#Q7.2  (L1, L2, L3, L4, L5, L6)=(4, 8, 5, 9, 6, 7)
+## I is known
+i72 <- read.csv("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 7/Question 7.2/input_index_7_2.txt", sep="")
+for (i in 1:length(i72$index)){
+  q=i72$index[i]+1
+  if (q%%(4*8*5*9*6)%%(4*8*5*9)%%(4*8*5)%%(4*8)%%4!=0){i72$x1[i]=q%%(4*8*5*9*6)%%(4*8*5*9)%%(4*8*5)%%(4*8)%%4-1}else(i72$x1[i]=3)
+  i72$x2[i]=floor(q%%(4*8*5*9*6)%%(4*8*5*9)%%(4*8*5)%%(4*8)/4)
+  i72$x3[i]=floor(q%%(4*8*5*9*6)%%(4*8*5*9)%%(4*8*5)/(4*8))
+  i72$x4[i]=floor(q%%(4*8*5*9*6)%%(4*8*5*9)/(4*8*5))
+  i72$x5[i]=floor(q%%(4*8*5*9*6)/(4*8*5*9))
+  i72$x6[i]=floor(q/(4*8*5*9*6))
+}
+outputc72=i72[,-1]
+write.table(outputc72,file='C:/Users/y1l1q/Desktop/answers/output_coordinates_7_2.txt',row.names = F,col.names = T,quote = F)
+## (x1,x2) is known
+x72 <- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 7/Question 7.2/input_coordinates_7_2.txt")
+for (i in 1:length(x72$x1)){
+  x72$index[i]=x72$x6[i]*4*8*5*9*6+x72$x5[i]*4*8*5*9+x72$x4[i]*4*8*5+x72$x3[i]*4*8+x72$x2[i]*4+x72$x1[i]
+}
+outputindex72=data.frame(index=x72$index)
+write.table(outputindex72,file='C:/Users/y1l1q/Desktop/answers/output_index_7_2.txt',row.names = F,col.names = T,quote = F)
+
+#Q8.2 k1=100,k2=600,k3=150,x0=0,y0=1,m0=10,n0=0
+dx=function(x,y,m,n){100*y*m-750*x}
+dy=function(x,y,m,n){750*x-100*y*m}
+dm=function(x,y,m,n){600*x-100*y*m}
+dn=function(x,y,m,n){150*x}
+x=0
+y=1
+m=10
+n=0
+h=0.0001
+aarray[1]=h
+xarray[1]=x
+yarray[1]=y
+marray[1]=m
+narray[1]=n
+  for (i in 2:round(1/h)){
+  
+  xk1=dx(x,y,m,n)
+  yk1=dy(x,y,m,n)
+  mk1=dm(x,y,m,n)
+  nk1=dn(x,y,m,n)###first order
+  
+  xk2=dx((x+0.5*h*xk1),(y+0.5*h*yk1),(m+0.5*h*mk1),(n+0.5*h*nk1))
+  yk2=dy((x+0.5*h*xk1),(y+0.5*h*yk1),(m+0.5*h*mk1),(n+0.5*h*nk1))
+  mk2=dm((x+0.5*h*xk1),(y+0.5*h*yk1),(m+0.5*h*mk1),(n+0.5*h*nk1))
+  nk2=dn((x+0.5*h*xk1),(y+0.5*h*yk1),(m+0.5*h*mk1),(n+0.5*h*nk1))### second order
+  
+  xk3=dx((x+0.5*h*xk2),(y+0.5*h*yk2),(m+0.5*h*mk2),(n+0.5*h*nk2))
+  yk3=dy((x+0.5*h*xk2),(y+0.5*h*yk2),(m+0.5*h*mk2),(n+0.5*h*nk2))
+  mk3=dm((x+0.5*h*xk2),(y+0.5*h*yk2),(m+0.5*h*mk2),(n+0.5*h*nk2))
+  nk3=dn((x+0.5*h*xk2),(y+0.5*h*yk2),(m+0.5*h*mk2),(n+0.5*h*nk2))### third order
+  
+  xk4=dx((x+h*xk3),(y+h*yk3),(m+h*mk3),(n+h*nk3))
+  yk4=dy((x+h*xk3),(y+h*yk3),(m+h*mk3),(n+h*nk3))
+  mk4=dm((x+h*xk3),(y+h*yk3),(m+h*mk3),(n+h*nk3))
+  nk4=dn((x+h*xk3),(y+h*yk3),(m+h*mk3),(n+h*nk3))###fourth order
+  
+  x=x+h*(xk1+2*xk2+2*xk3+xk4)/6
+  y=y+h*(yk1+2*yk2+2*yk3+yk4)/6
+  m=m+h*(mk1+2*mk2+2*mk3+mk4)/6
+  n=n+h*(nk1+2*nk2+2*nk3+nk4)/6
+  xarray[i]=x
+  yarray[i]=y
+  marray[i]=m
+  narray[i]=n
+  aarray[i]=h*i
+  }  
+par(mfrow=c(2,2))
+plot(aarray,xarray,xlab = 'h',ylab = '[ES]',col='blue')
+plot(aarray,yarray,xlab = 'h',ylab = '[E]',col='red')
+plot(aarray,marray,xlab = 'h',ylab = '[S]',col='green')
+plot(aarray,narray,xlab = 'h',ylab = '[P]',col='purple')
+
+#Q9
+train_data <- read.delim("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 3/train_data.txt")
+train_truth <- read.csv("C:/Users/y1l1q/Desktop/AY20_MBDS_questions/Question 3/train_truth.txt", sep="")
+train=data.frame(cbind(train_data,train_truth))
+n=length(train$y)
+zz1=1:n
+zz2=rep(1:5,ceiling(n/5))[1:n]
+set.seed(100)
+zz2=sample(zz2,n)
+
+##linear regression
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=lm(y~.,data=train[-m,])
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE1=mean(RMSE)
+
+
+
+##regression tree
+library(rpart)
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=rpart(y~.,data=train[-m,])
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE2=mean(RMSE)
+
+
+##bagging regression
+library(ipred)
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=bagging(y~.,data=train[-m,])
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE3=mean(RMSE)
+
+
+
+##randomforest 
+library(randomForest)
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=randomForest(y~.,data=train[-m,],importance=T)
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE4=mean(RMSE)
+
+
+##neural network
+library(neuralnet)
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=neuralnet(y~.,data = train[-m,],hidden = c(4,4))
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE5=mean(RMSE)
+
+
+##support vector machine
+library(rminer)
+RMSE=rep(0,5)
+for (i in 1:5){
+  m=zz1[zz2==i]
+  a=fit(y~.,data = train[-m,],model='svm')
+  y0=predict(a,train[m,])
+  RMSE[i]=sqrt(mean((y0-train$y[m])^2))
+}
+RMSE6=mean(RMSE)
+
+names=c('linear','tree','bagging','randomforest','neuralnetwork','svm')
+rmse=c(RMSE1,RMSE2,RMSE3,RMSE4,RMSE5,RMSE6)
+cbind(names,rmse)
+
